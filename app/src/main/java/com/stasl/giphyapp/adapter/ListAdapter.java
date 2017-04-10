@@ -12,7 +12,7 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.stasl.giphyapp.R;
-import com.stasl.giphyapp.activity.SecondActivity;
+import com.stasl.giphyapp.activity.ImageViewActivity;
 import com.stasl.giphyapp.gif.Data;
 import com.stasl.giphyapp.gif.GIF;
 
@@ -54,21 +54,21 @@ public class ListAdapter extends BaseAdapter
         }
         Data gif = (Data) getItem(position);
         ImageView image = (ImageView)view.findViewById(R.id.imageView);
-        String imageURL = gif.getImages().getPreview_gif().getUrl();
-        view.findViewById(R.id.imageView2).setTag(imageURL);
+        view.findViewById(R.id.imageView2).setTag(gif.getImages().getOriginal().getUrl() + ";" + gif.getTrending_datetime());
         Glide.with(context)
-                .load(imageURL)
+                .load(gif.getImages().getPreview_gif().getUrl())
                 .asGif()
+                .placeholder(R.drawable.ic_cached_black_48dp)
                 .thumbnail(0.1f)
                 .diskCacheStrategy(DiskCacheStrategy.SOURCE)
                 .into(image);
         view.findViewById(R.id.imageView2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(context, SecondActivity.class);
+                Log.d("Image clicked", v.findViewById(R.id.imageView2).getTag().toString());
+                Intent intent = new Intent(context, ImageViewActivity.class);
                 intent.putExtra("imageURL", v.findViewById(R.id.imageView2).getTag().toString());
                 context.startActivity(intent);
-                Log.d("Image clicked", v.findViewById(R.id.imageView2).getTag().toString());
             }
         });
         return view;

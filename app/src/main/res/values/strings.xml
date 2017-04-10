@@ -3,4 +3,6 @@
     <string name="exitAction">Exit</string>
     <string name="searchAction">Search</string>
     <string name="searchHint">Search For Gifs</string>
+    <string name="settingsAction">Settings</string>
+    <string name="content_type">Content Type</string>
 </resources>

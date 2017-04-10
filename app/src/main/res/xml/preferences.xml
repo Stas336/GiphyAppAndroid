@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="Settings">
+        <ListPreference
+            android:defaultValue="10"
+            android:entries="@array/imagesLimit"
+            android:entryValues="@array/imagesLimit"
+            android:key="imagesLimit"
+            android:title="Images Limit" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

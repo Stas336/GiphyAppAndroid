@@ -2,7 +2,10 @@ package com.stasl.giphyapp.activity;
 
 import android.app.SearchManager;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.SearchView;
@@ -25,24 +28,24 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener{
 
-    private static final String baseURL = "http://api.giphy.com/";
-    private static final String publicApiKey = "dc6zaTOxFJmzC";
-    private static final int IMAGES_LIMIT = 25;
-    private static GIF gifs;
-    private ListView list;
+    private static final String BASE_URL = "http://api.giphy.com/";
+    private static final String PUBLIC_API_KEY = "dc6zaTOxFJmzC";
+    private static int IMAGES_LIMIT;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        try {
-            gifs = getTrending();
-        } catch (ExecutionException | InterruptedException e) {
-            e.printStackTrace();
-        }
-        ListAdapter adapter = new ListAdapter(this, gifs);
-        list = (ListView)findViewById(R.id.List);
-        list.setAdapter(adapter);
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        SharedPreferences getPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        IMAGES_LIMIT = Integer.valueOf(getPrefs.getString("imagesLimit", "10"));
+        showTrending();
     }
 
     @Override
@@ -51,7 +54,6 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-        //searchView.setSubmitButtonEnabled(true);
         searchView.setOnQueryTextListener(this);
         return true;
     }
@@ -59,14 +61,9 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     @Override
     public boolean onQueryTextSubmit(String query) {
         Log.d("SearchSubmit", query);
-        try {
-            gifs = search(query);
-        } catch (ExecutionException | InterruptedException e) {
-            e.printStackTrace();
-        }
-        ListAdapter adapter = new ListAdapter(this, gifs);
-        list = (ListView)findViewById(R.id.List);
-        list.setAdapter(adapter);
+        Intent intent = new Intent(MainActivity.this, SearchActivity.class);
+        intent.putExtra("term", query);
+        startActivity(intent);
         return false;
     }
 
@@ -83,6 +80,10 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             case R.id.action_exit:
                 android.os.Process.killProcess(android.os.Process.myPid());
                 return true;
+            case R.id.action_settings:
+                Intent modifySettings = new Intent(MainActivity.this, SettingsActivity.class);
+                startActivity(modifySettings);
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -90,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     public static GiphyAPI getAPI()
     {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(baseURL)
+                .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         return retrofit.create(GiphyAPI.class);
@@ -103,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             GiphyAPI api = getAPI();
             Response<GIF> response = null;
             try {
-                response = api.getTrendingGifs(publicApiKey, IMAGES_LIMIT).execute();
+                response = api.getTrendingGifs(PUBLIC_API_KEY, IMAGES_LIMIT).execute();
             } catch (IOException e) {
                 Log.d("GetTrending", e.getLocalizedMessage());
             }
@@ -124,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             GiphyAPI api = getAPI();
             Response<GIF> response = null;
             try {
-                response = api.searchGifs(params[0], publicApiKey, IMAGES_LIMIT).execute();
+                response = api.searchGifs(params[0], PUBLIC_API_KEY, IMAGES_LIMIT, params[1]).execute();
             } catch (IOException e) {
                 Log.d("Search", e.getLocalizedMessage());
             }
@@ -143,9 +144,22 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         giphyGetTrending.execute();
         return giphyGetTrending.get();
     }
-    public static GIF search(String term) throws ExecutionException, InterruptedException {
+    public static GIF search(String term, String rating) throws ExecutionException, InterruptedException {
         GiphySearchGifs giphySearchGifs = new GiphySearchGifs();
-        giphySearchGifs.execute(term);
+        giphySearchGifs.execute(term, rating);
         return giphySearchGifs.get();
+    }
+    private void showTrending()
+    {
+        GIF gifs = null;
+        try {
+            gifs = getTrending();
+        } catch (ExecutionException | InterruptedException e) {
+            Log.d("getTrendingException", e.getLocalizedMessage());
+            finish();
+        }
+        ListAdapter adapter = new ListAdapter(this, gifs);
+        ListView list = (ListView)findViewById(R.id.List);
+        list.setAdapter(adapter);
     }
 }
