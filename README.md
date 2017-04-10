@@ -1,5 +1,6 @@
 # GiphyAppAndroid
 Giphy Client App For Android
+
 How to install:
 1) Run following in the terminal: git clone git@github.com:Stas336/GiphyAppAndroid.git
 2) Open cloned project in Android Studio
